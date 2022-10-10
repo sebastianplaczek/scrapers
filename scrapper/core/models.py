@@ -13,3 +13,14 @@ class ZalandoDailyScraps(models.Model):
     zalandotoscrap = models.ForeignKey(ZalandoToScrap, on_delete=models.CASCADE)
     create_date = models.DateTimeField(default=timezone.now)
     price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
+
+class ZalandoLogs(models.Model):
+    zalandotoscrap = models.ForeignKey(ZalandoToScrap, on_delete=models.CASCADE)
+    error = models.CharField(max_length=20,null=False)
+    content = models.CharField(max_length=1000,blank=True,null=True)
+    create_date = models.DateTimeField(default=timezone.now)
+
+class ServicesErrors(models.Model):
+    service_name = models.CharField(max_length=30,null=False)
+    error = models.CharField(max_length=100)
+    create_date = models.DateTimeField(default=timezone.now)

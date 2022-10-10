@@ -1,19 +1,19 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
-import requests as r
+from datetime import datetime
+import sys
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service as FirefoxService
+from django.utils import timezone
 
-
-from core.models import ZalandoToScrap,ZalandoDailyScraps
+from core.models import ZalandoToScrap,ZalandoDailyScraps,ZalandoLogs,ServicesErrors
 
 
 
 
 class ZalandoScrapRobot():
-
 
     def init_driver_firefox(self):
         firefox_options = Options()
@@ -25,14 +25,18 @@ class ZalandoScrapRobot():
         self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
 
     def run(self,endpoint):
-        self.endpoint = endpoint
-        print(self.endpoint)
-        self.check_request()
         self.init_driver_firefox()
+        self.inactive_site_error_check()
+        self.endpoint = endpoint
+        self.item_to_scrap = ZalandoToScrap.objects.get(active=True, endpoint=self.endpoint)
+
+        print(self.endpoint)
+
         self.open_website()
         #self.accept_cookies()
         self.check_price_by_path()
-        self.save_to_db()
+        if self.item_to_scrap.active == True:
+            self.save_to_db()
         self.driver.close()
 
 
@@ -56,9 +60,33 @@ class ZalandoScrapRobot():
             element_list = element.split(' ')
             self.find_price(element_list)
             time.sleep(1)
-        except Exception as e:
+        except Exception as e1:
             self.price=None
-            print(e)
+            # jezeli nie znajdzie elementu to ma zapisac w logach i zmienic status
+            try:
+                element = self.driver.find_element(By.XPATH,
+                                                   '/html/body/div/div[29]/section[9]/h1').text
+                if element=='Wystąpił błąd':
+                    print('Inactive endpoint')
+                    ZalandoLogs.objects.create(zalandotoscrap=self.item_to_scrap,error='Endpoint nieaktywny')
+                    # zmiana statusu na inactive
+                    self.item_to_scrap.active = False
+                    self.item_to_scrap.deactivate_date = datetime.now()
+                    self.item_to_scrap.save()
+
+
+
+            except Exception as e2:
+                print(e2)
+                ZalandoLogs.objects.create(zalandotoscrap=self.item_to_scrap, error='Other error',content=e2)
+                #zapisac do bazy jako inny blad na stronie
+
+    def inactive_site_error_check(self):
+        self.endpoint = 'https://www.zalando.pl/some-product'
+        self.open_website()
+        element = self.driver.find_element(By.XPATH,'/html/body/div[2]/div[29]/section[9]/h1').text
+        if element != 'Wystąpił błąd':
+            ServicesErrors.objects.create(service_name='Zalando', error='Not found zmieniło swoje miejsce w strukturze')
 
     # def check_price_by_class(self):
     #     #not working on zalando
@@ -85,11 +113,7 @@ class ZalandoScrapRobot():
             self.price = None
 
     def save_to_db(self):
-        item_to_scrap = ZalandoToScrap.objects.get(active=True,endpoint=self.endpoint)
+        ZalandoDailyScraps.objects.create(price=self.price,zalandotoscrap=self.item_to_scrap)
 
-        ZalandoDailyScraps.objects.create(price=self.price,zalandotoscrap=item_to_scrap)
-
-    def check_request(self,endpoint):
-        print(r.get(endpoint))
 
 
