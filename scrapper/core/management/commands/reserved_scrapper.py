@@ -11,6 +11,8 @@ class Command(BaseCommand):
         endpoint_list = ReservedToScrap.objects.filter(active=True).all()
 
         scraper = ReservedScrapRobot()
-        for object in endpoint_list:
-            scraper.run(endpoint=object.endpoint)
-            time.sleep(3)
+        scraper.inactive_site_error_check()
+        if scraper.correct_structure:
+            for object in endpoint_list:
+                scraper.run(endpoint=object.endpoint)
+                time.sleep(3)

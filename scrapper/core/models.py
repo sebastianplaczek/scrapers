@@ -35,8 +35,8 @@ class ReservedToScrap(models.Model):
 class ReservedDailyScraps(models.Model):
     toscrap = models.ForeignKey(ReservedToScrap, on_delete=models.CASCADE)
     create_date = models.DateTimeField(default=timezone.now)
-    price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
-
+    discount_price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
+    price = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
 class ReservedLogs(models.Model):
     toscrap = models.ForeignKey(ReservedToScrap, on_delete=models.CASCADE)
     error = models.CharField(max_length=20,null=False)
