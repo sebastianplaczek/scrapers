@@ -1,7 +1,13 @@
 # scrapers
 
--Zalando
--Mohito
+-Zalando (DONE)
+
+-Reserved (DONE)
+
+-Mohito (In progress)
+
+
 -Zara
+
+
 -Medicine
--
