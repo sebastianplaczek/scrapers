@@ -17,7 +17,7 @@ class ReservedScrapRobot():
 
     def init_driver_firefox(self):
         firefox_options = Options()
-        #firefox_options.add_argument("--headless")
+        firefox_options.add_argument("--headless")
         firefox_options.add_argument('--disable-gpu')
         firefox_options.add_argument('--incognito')
         firefox_options.add_argument('--window-size=1600,900')
@@ -67,6 +67,7 @@ class ReservedScrapRobot():
 
 
         except Exception as e:
+            print(e)
             print('Nie znaleziono ceny promocyjnej')
             self.discount_price = None
             try:
@@ -78,7 +79,7 @@ class ReservedScrapRobot():
                 time.sleep(1)
 
 
-            except Exception as e:
+            except Exception as e1:
                 print(e1)
                 self.price=None
                 self.discount_price = None
