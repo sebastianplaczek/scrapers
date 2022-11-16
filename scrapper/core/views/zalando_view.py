@@ -8,7 +8,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from django.utils import timezone
 
-from core.models import ZalandoToScrap,ZalandoDailyScraps,ZalandoLogs,ServicesErrors
+from core.models import LinksToScrap,DailyScraps,ServicesLogs,ServicesErrors
+#from core.models import ZalandoToScrap,ZalandoDailyScraps,ZalandoLogs,ServicesErrors
 
 
 
@@ -17,7 +18,7 @@ class ZalandoScrapRobot():
 
     def init_driver_firefox(self):
         firefox_options = Options()
-        #firefox_options.add_argument("--headless")
+        firefox_options.add_argument("--headless")
         firefox_options.add_argument('--disable-gpu')
         firefox_options.add_argument('--incognito')
         firefox_options.add_argument('--window-size=1600,900')

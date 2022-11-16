@@ -3,16 +3,16 @@ from core.views.reserved_view import ReservedScrapRobot
 from django.utils import timezone
 import time
 
-from core.models import ReservedToScrap,ReservedDailyScraps
+from core.models import LinksToScrap
 
 class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
-        endpoint_list = ReservedToScrap.objects.filter(active=True).all()
+        links_list = LinksToScrap.objects.filter(active=True,service='reserved').all()
 
         scraper = ReservedScrapRobot()
         scraper.inactive_site_error_check()
         if scraper.correct_structure:
-            for object in endpoint_list:
-                scraper.run(endpoint=object.endpoint)
+            for object in links_list:
+                scraper.run(link=object.link)
                 time.sleep(3)

@@ -1,22 +1,33 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 
-class ZalandoToScrap(models.Model):
-    endpoint = models.CharField(max_length=100,null=False)
+class LinksToScrap(models.Model):
+    link = models.CharField(max_length=100,null=False)
+    item_name = models.CharField(max_length=50,blank=True,null=True)
     create_date = models.DateTimeField(default=timezone.now)
+    service = models.CharField(max_length=20,null=False)
     active = models.BooleanField(default=True)
     deactivate_date = models.DateTimeField(blank=True,null=True)
 
-class ZalandoDailyScraps(models.Model):
-    zalandotoscrap = models.ForeignKey(ZalandoToScrap, on_delete=models.CASCADE)
+class UsersLinks(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    linktoscrap = models.ForeignKey(LinksToScrap, on_delete=models.CASCADE)
+    active = models.BooleanField(default=True)
     create_date = models.DateTimeField(default=timezone.now)
-    price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
 
-class ZalandoLogs(models.Model):
-    zalandotoscrap = models.ForeignKey(ZalandoToScrap, on_delete=models.CASCADE)
+class DailyScraps(models.Model):
+    linktoscrap = models.ForeignKey(LinksToScrap, on_delete=models.CASCADE)
+    price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
+    discount_price = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
+    create_date = models.DateTimeField(default=timezone.now)
+
+class ServicesLogs(models.Model):
+    linktoscrap = models.ForeignKey(LinksToScrap, on_delete=models.CASCADE)
     error = models.CharField(max_length=20,null=False)
+    service = models.CharField(max_length=20,null=False)
     content = models.CharField(max_length=1000,blank=True,null=True)
     create_date = models.DateTimeField(default=timezone.now)
 
@@ -26,36 +37,3 @@ class ServicesErrors(models.Model):
     create_date = models.DateTimeField(default=timezone.now)
 
 
-class ReservedToScrap(models.Model):
-    endpoint = models.CharField(max_length=100,null=False)
-    create_date = models.DateTimeField(default=timezone.now)
-    active = models.BooleanField(default=True)
-    deactivate_date = models.DateTimeField(blank=True,null=True)
-
-class ReservedDailyScraps(models.Model):
-    toscrap = models.ForeignKey(ReservedToScrap, on_delete=models.CASCADE)
-    create_date = models.DateTimeField(default=timezone.now)
-    discount_price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
-    price = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
-class ReservedLogs(models.Model):
-    toscrap = models.ForeignKey(ReservedToScrap, on_delete=models.CASCADE)
-    error = models.CharField(max_length=20,null=False)
-    content = models.CharField(max_length=1000,blank=True,null=True)
-    create_date = models.DateTimeField(default=timezone.now)
-
-class MohitoToScrap(models.Model):
-    endpoint = models.CharField(max_length=100,null=False)
-    create_date = models.DateTimeField(default=timezone.now)
-    active = models.BooleanField(default=True)
-    deactivate_date = models.DateTimeField(blank=True,null=True)
-
-class MohitoDailyScraps(models.Model):
-    toscrap = models.ForeignKey(MohitoToScrap, on_delete=models.CASCADE)
-    create_date = models.DateTimeField(default=timezone.now)
-    discount_price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
-    price = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
-class MohitoLogs(models.Model):
-    toscrap = models.ForeignKey(MohitoToScrap, on_delete=models.CASCADE)
-    error = models.CharField(max_length=20,null=False)
-    content = models.CharField(max_length=1000,blank=True,null=True)
-    create_date = models.DateTimeField(default=timezone.now)

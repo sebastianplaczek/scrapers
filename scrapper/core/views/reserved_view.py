@@ -8,7 +8,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from django.utils import timezone
 
-from core.models import ReservedToScrap,ReservedDailyScraps,ReservedLogs,ServicesErrors
+from core.models import LinksToScrap,DailyScraps,ServicesLogs,ServicesErrors
 
 
 
@@ -24,12 +24,12 @@ class ReservedScrapRobot():
         firefox_options.add_argument('--no-sandbox')
         self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
 
-    def run(self,endpoint):
+    def run(self,link):
         self.init_driver_firefox()
-        self.endpoint = endpoint
-        self.item_to_scrap = ReservedToScrap.objects.get(active=True, endpoint=self.endpoint)
+        self.link = link
+        self.item_to_scrap = LinksToScrap.objects.get(active=True, link=self.link)
 
-        print(self.endpoint)
+        print(self.link)
 
         self.open_website()
         self.check_price_by_css_selector()
@@ -42,7 +42,7 @@ class ReservedScrapRobot():
         time.sleep(5)
 
     def open_website(self):
-        self.driver.get(self.endpoint)
+        self.driver.get(self.link)
         time.sleep(5)
         self.accept_cookies()
     def accept_cookies(self):
@@ -53,6 +53,15 @@ class ReservedScrapRobot():
         time.sleep(5)
 
     def check_price_by_css_selector(self):
+        try:
+            self.item_name = self.driver.find_element(By.CSS_SELECTOR, 'h1.product-name').text
+
+        except Exception as e:
+            self.item_name = None
+            print(e)
+
+        print('Item name',self.item_name)
+
         try:
             element = self.driver.find_element(By.CSS_SELECTOR, 'div.basic-pricestyled__StyledBasicPrice-ptbrpf-0.dhHSLU.basic-price.promo-price')
             self.discount_price = element.text.replace(',','.').split(' ')[0]
@@ -88,8 +97,8 @@ class ReservedScrapRobot():
                 try:
                     element = self.driver.find_element(By.CSS_SELECTOR,'div.search-empty').text.split('.')[0]
                     if element=='Przepraszamy, ta strona nie istnieje':
-                        print('Inactive endpoint')
-                        ReservedLogs.objects.create(toscrap=self.item_to_scrap,error='Endpoint nieaktywny')
+                        print('Nieaktywny link')
+                        ServicesLogs.objects.create(linktoscrap=self.item_to_scrap,error='Link nieaktywny')
                         # zmiana statusu na inactive
                         self.item_to_scrap.active = False
                         self.item_to_scrap.deactivate_date = datetime.now()
@@ -99,12 +108,12 @@ class ReservedScrapRobot():
 
                 except Exception as e2:
                     print(e2)
-                    ReservedLogs.objects.create(toscrap=self.item_to_scrap, error='Other error',content=e2)
+                    ServicesLogs.objects.create(service='reserved',linktoscrap=self.item_to_scrap, error='Other error',content=e2)
                     #zapisac do bazy jako inny blad na stronie
 
     def inactive_site_error_check(self):
         self.init_driver_firefox()
-        self.endpoint = 'https://www.reserved.com/pl/pl/some-item'
+        self.link = 'https://www.reserved.com/pl/pl/some-item'
         self.open_website()
         element = self.driver.find_element(By.CSS_SELECTOR,'div.search-empty').text
         #element = self.driver.find_element(By.XPATH,'/html/body/div[2]/section/div/div/h2').text
@@ -118,7 +127,7 @@ class ReservedScrapRobot():
 
 
     def save_to_db(self):
-        ReservedDailyScraps.objects.create(discount_price=self.discount_price,price=self.price,toscrap=self.item_to_scrap)
+        DailyScraps.objects.create(discount_price=self.discount_price,price=self.price,linktoscrap=self.item_to_scrap)
 
 
 
