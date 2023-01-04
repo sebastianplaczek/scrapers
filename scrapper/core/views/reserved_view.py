@@ -3,10 +3,12 @@ from selenium.webdriver.common.by import By
 import time
 from datetime import datetime
 import sys
-from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from django.utils import timezone
+
+from webdriver_manager.firefox import GeckoDriverManager
+
 
 from core.models import LinksToScrap,DailyScraps,ServicesLogs,ServicesErrors
 
@@ -22,7 +24,7 @@ class ReservedScrapRobot():
         firefox_options.add_argument('--incognito')
         firefox_options.add_argument('--window-size=1600,900')
         firefox_options.add_argument('--no-sandbox')
-        self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
+        self.driver = webdriver.Firefox(options=firefox_options)
 
     def run(self,link):
         self.init_driver_firefox()

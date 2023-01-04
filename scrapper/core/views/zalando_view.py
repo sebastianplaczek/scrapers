@@ -22,8 +22,8 @@ class ZalandoScrapRobot():
         firefox_options.add_argument('--disable-gpu')
         firefox_options.add_argument('--incognito')
         firefox_options.add_argument('--window-size=1600,900')
-        firefox_options.add_argument('--no-sandbox')
-        self.driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=firefox_options)
+        firefox_options.add_argument('-ox_options.add_argument('--no-sandbox')
+        self.driver = webdriver.Firefox(options=firefox_options)
 
     def run(self,endpoint):
         self.init_driver_firefox()
