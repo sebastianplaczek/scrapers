@@ -15,6 +15,8 @@ class LinksToScrap(models.Model):
 class UsersLinks(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     linktoscrap = models.ForeignKey(LinksToScrap, on_delete=models.CASCADE)
+    conditional = models.CharField(max_length=10,blank=True,null=True)
+    conditional_price = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
     active = models.BooleanField(default=True)
     create_date = models.DateTimeField(default=timezone.now)
 

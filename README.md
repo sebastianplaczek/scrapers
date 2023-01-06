@@ -11,3 +11,5 @@
 
 
 -Medicine
+
+chmod +x script - nadanie uprawnien dla pliku
