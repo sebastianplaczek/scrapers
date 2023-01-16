@@ -39,3 +39,24 @@ class ServicesErrors(models.Model):
     create_date = models.DateTimeField(default=timezone.now)
 
 
+class Otodom(models.Model):
+    type = models.CharField(max_length=10)
+    link = models.CharField(max_length=255,blank=True,null=True)
+    title = models.CharField(max_length=255,blank=True,null=True)
+    address = models.CharField(max_length=255,blank=True,null=True)
+    price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
+    price_per_m = models.IntegerField(blank=True,null=True)
+    rooms = models.IntegerField(blank=True,null=True)
+    size = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
+    active = models.BooleanField(default=True)
+    additional_params_1 = models.CharField(max_length=1000)
+    additional_params_2 = models.CharField(max_length=1000)
+    create_date = models.DateTimeField(default=timezone.now)
+    seller = models.CharField(max_length=255,blank=True,null=True)
+
+
+class OtodomLogs(models.Model):
+    link = models.CharField(max_length=255,blank=True,null=True)
+    error = models.CharField(max_length=10000,null=False)
+    type = models.CharField(max_length=10)
+    create_date = models.DateTimeField(default=timezone.now)
