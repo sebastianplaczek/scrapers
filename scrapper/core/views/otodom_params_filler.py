@@ -7,6 +7,8 @@ from selenium.webdriver.common.by import By
 import time
 from bs4 import BeautifulSoup
 
+import json
+
 
 import pandas as pd
 import requests
@@ -37,7 +39,7 @@ class OtodomFiller():
     def run(self):
         print('Robot zaczyna prace')
         self.init_driver()
-        self.real_estate_data('Mieszkania')
+        self.real_estate_filler('Mieszkania')
 
         print('done')
         time.sleep(5)
@@ -63,105 +65,101 @@ class OtodomFiller():
         return x
 
     def real_estate_filler(self,type):
-
+        print(datetime.now)
         correct_params = False
         if type == 'Mieszkania':
 
-            offer = Otodom.objects.filter(additional_params1=None).first()
+            try:
+                offer = Otodom.objects.filter(additional_params_1='',filled=0).first()
 
-            import pdb;pdb.set_trace()
 
 
-            self.open_website(f'https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/cala-polska?market=ALL&viewType=listing&lang=pl&searchingCriteria=sprzedaz&searchingCriteria=mieszkanie&page=1&limit={limit}')
-            self.accept_cookies()
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(5)
-            number_of_pages = int(self.driver.find_element(By.XPATH,
-                                              '/html/body/div[1]/div[2]/main/div/div[2]/div[1]/div[4]/div/nav/button[5]').get_attribute('aria-label').split(' ')[-1])
-            print(f'Number of pages {number_of_pages}')
+                self.open_website(f'https://www.{offer.link}')
+                self.accept_cookies()
+
+                html = self.driver.page_source
+                soup_before = BeautifulSoup(html, "html.parser")
+
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(5)
+
+                html = self.driver.page_source
+                soup = BeautifulSoup(html, "html.parser")
+
+                params1 =  soup.find_all('div', {'class' : 'css-1ccovha estckra9'})
+                params2 = soup.find_all('div', {'class' : 'css-f45csg estckra9'})
+                address = soup.find('a', {'class' : 'e1nbpvi60 css-171pgf6 e1enecw71'}).text
+
+                categories = soup_before.find_all('a', {'class' : 'css-1in5nid e1je57sb4'})
+                if len(categories) == 0:
+                    soup.find_all('a', {'class': 'css-1in5nid e1je57sb4'})
+
+                try:
+                    vivodeship = categories[1].text
+                except Exception as e:
+                    print(e)
+                    vivodeship = ''
+                try:
+                    city = categories[2].text
+                except Exception as e:
+                    print(e)
+                    city = ''
+
+
+                params1_dict = {}
+                for param in params1:
+                    try:
+                        value = param.find('div', {'class': 'css-1wi2w6s estckra5'}).text
+                        params1_dict[f"{param['aria-label']}"] = value
+                    except Exception as e:
+                        value = ''
+                        params1_dict[f"{param['aria-label']}"] = value
+                        print(param)
+
+
+                params2_dict = {}
+                for param in params2:
+                    try:
+                        value = param.find('div', {'class': 'css-1wi2w6s estckra5'}).text
+                        params2_dict[f"{param['aria-label']}"] = value
+                    except Exception as e:
+                        value = ''
+                        params2_dict[f"{param['aria-label']}"] = value
+                        print(param)
+
+                params1 = json.dumps(params1_dict)
+                params2 = json.dumps(params2_dict)
+
+
+                offer.additional_params_1 = params1
+                offer.additional_params_2 = params2
+                offer.city = city
+                offer.vivodeship = vivodeship
+                offer.filled = 1
+
+                if offer.address == None:
+                    offer.address = address
+
+            offer.save()
+
+
+
+
+
+
+
+
             self.driver.close()
             self.driver.quit()
-
-            for i in range(1,number_of_pages+1):
-                try:
-
-
-
-
-                    self.init_driver()
-                    print('Driver inited')
-                    otomoto_link = f'https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/cala-polska?market=ALL&viewType=listing&lang=pl&searchingCriteria=sprzedaz&searchingCriteria=mieszkanie&page={i}&limit={limit}'
-                    print(otomoto_link)
-                    self.open_website(otomoto_link)
-                    print('Website opened')
-                    self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    print('Website scrolled down')
-                    time.sleep(5)
-
-                    html = self.driver.page_source
-                    soup = BeautifulSoup(html, "html.parser")
-
-                    offers = soup.find_all('li', {'class' : 'css-p74l73 es62z2j20'})
-
-                    print('Number of offers in soup ' , len(offers))
-                    if len(offers) == number_of_offers:
-
-                        for j,offer in enumerate(offers):
-                            self.link ='otodom.pl' + offer.find('a', {'class' : 'css-13ki2r1 es62z2j16'})['href']
-                            try:
-                                title = offer.find('h3', {'class' : 'css-1rhznz4 es62z2j12'}).text
-                            except:
-                                title= None
-                            try:
-                                address = offer.find('span', {'class' : 'css-17o293g es62z2j10'}).text
-                            except:
-                                address = None
-
-                            param = offer.find_all('span', {'class' : 'css-s8wpzb e1brl80i1'})
-
-                            bad_character = self.find_error_letter(param[0].text[:-2])
-                            try:
-                                price = float(param[0].text.replace(bad_character,"")[:-2])
-                            except:
-                                price = None
-                            try:
-                                price_per_m = int(param[1].text[:-5].replace(bad_character,''))
-                            except:
-                                price_per_m = None
-                            try:
-                                rooms = int(param[2].text.split(' ')[0])
-                            except:
-                                rooms = None
-                            try:
-                                size = float(param[3].text.split(' ')[0])
-                            except:
-                                size = None
-
-
-
-                            try:
-                                seller = offer.find('span', {'class' : ['css-16zp76g e1dxhs6v2','css-4pyl2y e1dxhs6v3']}).text
-                            except:
-                                seller = None
-
-                            Otodom.objects.create(
-                                link=self.link,
-                                title=title,
-                                address=address,
-                                price=price,
-                                price_per_m=price_per_m,
-                                rooms=rooms,
-                                size=size,
-                                type='flat',
-                                seller = seller
-                            )
-                        print(f'Page {i} completed')
-                        self.driver.close()
-                        self.driver.quit()
-                except Exception as e:
-                    OtodomLogs.objects.create(link=self.link,
-                                              type = type,
-                                              error = str(e))
+            except Exception as e:
+                offer.filled = 2
+                offer.save()
+                OtodomLogs.objects.create(link=offer.link,
+                                          type = type,
+                                          error = str(e),
+                                          robot='OtodomFiller')
+                self.driver.close()
+                self.driver.quit()
 
 
 

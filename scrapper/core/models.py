@@ -51,8 +51,11 @@ class Otodom(models.Model):
     active = models.BooleanField(default=True)
     additional_params_1 = models.CharField(max_length=1000)
     additional_params_2 = models.CharField(max_length=1000)
+    vivodeship = models.CharField(max_length=15, blank=True, null=True)
+    city = models.CharField(max_length=15, blank=True, null=True)
     create_date = models.DateTimeField(default=timezone.now)
     seller = models.CharField(max_length=255,blank=True,null=True)
+    filled = models.IntegerField(default=0)
 
 
 class OtodomLogs(models.Model):
@@ -60,3 +63,4 @@ class OtodomLogs(models.Model):
     error = models.CharField(max_length=10000,null=False)
     type = models.CharField(max_length=10)
     create_date = models.DateTimeField(default=timezone.now)
+    robot = models.CharField(max_length=25)

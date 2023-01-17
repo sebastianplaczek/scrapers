@@ -84,7 +84,7 @@ class OtodomScrapper():
         return x
 
     def real_estate_data(self,type):
-
+        print(datetime.now)
         correct_params = False
         if type == 'Mieszkania':
             limit = 72
@@ -172,15 +172,21 @@ class OtodomScrapper():
                                 rooms=rooms,
                                 size=size,
                                 type='flat',
-                                seller = seller
+                                seller = seller,
+                                filled = 0
                             )
-                        print(f'Page {i} completed')
                         self.driver.close()
                         self.driver.quit()
+
+                        print(f'{offer.link : 'completed'}')
+
                 except Exception as e:
                     OtodomLogs.objects.create(link=self.link,
                                               type = type,
-                                              error = str(e))
+                                              error = str(e),
+                                          robot='OtodomScrapper')
+                    self.driver.close()
+                    self.driver.quit()
 
 
 
