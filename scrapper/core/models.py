@@ -51,11 +51,13 @@ class Otodom(models.Model):
     active = models.BooleanField(default=True)
     additional_params_1 = models.CharField(max_length=1000)
     additional_params_2 = models.CharField(max_length=1000)
-    vivodeship = models.CharField(max_length=15, blank=True, null=True)
-    city = models.CharField(max_length=15, blank=True, null=True)
+    vivodeship = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
     create_date = models.DateTimeField(default=timezone.now)
     seller = models.CharField(max_length=255,blank=True,null=True)
     filled = models.IntegerField(default=0)
+    page = models.IntegerField(blank=True,null=True)
+    bumped = models.IntegerField(default=0,blank=True,null=True)
 
 
 class OtodomLogs(models.Model):
