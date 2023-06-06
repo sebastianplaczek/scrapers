@@ -44,6 +44,7 @@ class Otodom(models.Model):
     link = models.CharField(max_length=255,blank=True,null=True)
     title = models.CharField(max_length=255,blank=True,null=True)
     address = models.CharField(max_length=255,blank=True,null=True)
+    address_params = models.CharField(max_length=1000,blank=True,null=True)
     price = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=10)
     price_per_m = models.IntegerField(blank=True,null=True)
     rooms = models.IntegerField(blank=True,null=True)
