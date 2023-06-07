@@ -204,84 +204,115 @@ class OtodomScrapper():
                     self.driver.quit()
 
     def fill_params_from_link(self):
+        start_dt = datetime.now()
+        ads = Otodom.objects.filter(filled=0)[:4]
 
-        ad = Otodom.objects.filter(filled=0).first()
-        ad.filled = 1
-        ad.save()
+        if len(ads)== 0:
+            print('No offer')
 
-        print('Filler zaczyna prace')
-        self.init_driver()
-        print(ad.link)
-        self.open_website('https://www.'+ ad.link)
-        print('Website opened')
-        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        print('Website scrolled down')
-        time.sleep(5)
+        else:
+            print('Filler zaczyna prace')
+            for ad in ads:
+                ad.filled = 1
+                ad.save()
 
-        html = self.driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
-
-        bumped = soup.find_all('p', {'class','css-1vd92mz ewcwyit0'})
-        if len(bumped)>0:
-            ad.bumped = 1
+            for ad in ads:
 
 
+                self.init_driver()
+                print(ad.link)
+                #ad.link = 'otodom.pl/pl/oferta/mieszkanie-45-48-m2-kazimierz-ID4lK4P'
 
-        address_params = soup.find_all('a', {'class': 'css-1in5nid e19r3rnf1'})
-        address_params_dict = {}
-        for i,param in enumerate(address_params):
-            if i >0:
-                address_params_dict[i] = param.text
-        print(address_params_dict)
+                self.open_website('https://www.'+ ad.link)
+                print('Website opened')
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                print('Website scrolled down')
+                time.sleep(5)
 
+                html = self.driver.page_source
+                soup = BeautifulSoup(html, "html.parser")
 
-        additional_params1 = soup.find_all('div', {'class': 'css-kkaknb enb64yk0'})
-        additional_params1_dict = {}
-        for param in additional_params1:
-            try:
-                title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+                inactive = soup.find_all('strong', {'class' : 'css-1flyc9m ercakuy1'})
 
-            except Exception:
-                title = ''
-            try:
-                param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
-            except Exception:
-                param_1 = ''
-
-            additional_params1_dict[title] = param_1
-
-        additional_params2 = soup.find_all('div', {'class': 'css-1k2qr23 enb64yk0'})
-        additional_params2_dict = {}
-        for param in additional_params2:
-            try:
-                title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
-
-            except Exception:
-                title = ''
-            try:
-                param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
-            except Exception:
-                param_1 = ''
-
-            additional_params2_dict[title] = param_1
+                if len(inactive) > 0:
+                    ad.active = 0
+                    ad.save()
+                else:
+                    bumped = soup.find_all('p', {'class':'css-1vd92mz ewcwyit0'})
+                    if len(bumped)>0:
+                        ad.bumped = 1
 
 
-        description = soup.find('div', {'class': 'css-1wekrze e1lbnp621'}).text
 
-        try:
-            prediction = soup.find('p', {'class' : 'css-aovmnt e1vfrca35'}).find_all('b')
+                    address_params = soup.find_all('a', {'class': 'css-1in5nid e19r3rnf1'})
+                    address_params_dict = {}
+                    for i,param in enumerate(address_params):
+                        if i >0:
+                            address_params_dict[i] = param.text
+                    print(address_params_dict)
 
-            additional_params2_dict['pred_val_min'] = prediction[0].text[:-3].replace("\xa0",'')
-            additional_params2_dict['pred_val_max'] = prediction[1].text[:-3].replace("\xa0", '')
-        except Exception as e:
-            print(e)
+                    try:
+                        city = address_params[2].text
+                        vivodeship = address_params[1].text
+                    except Exception as e:
+                        city = ''
+                        vivodeship = ''
+                        print(e)
 
-        ad.additional_params_1 = json.dumps(additional_params1_dict)
-        ad.additional_params_2 = json.dumps(additional_params2_dict)
-        ad.address_params = json.dumps(address_params_dict)
-        ad.save()
 
-        self.driver.close()
+                    additional_params1 = soup.find_all('div', {'class': 'css-kkaknb enb64yk0'})
+                    additional_params1_dict = {}
+                    for param in additional_params1:
+                        try:
+                            title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+
+                        except Exception:
+                            title = ''
+                        try:
+                            param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
+                        except Exception:
+                            param_1 = ''
+
+                        additional_params1_dict[title] = param_1
+
+                    additional_params2 = soup.find_all('div', {'class': 'css-1k2qr23 enb64yk0'})
+                    additional_params2_dict = {}
+                    for param in additional_params2:
+                        try:
+                            title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+
+                        except Exception:
+                            title = ''
+                        try:
+                            param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
+                        except Exception:
+                            param_1 = ''
+
+                        additional_params2_dict[title] = param_1
+
+
+                    description = soup.find('div', {'class': 'css-1wekrze e1lbnp621'}).text
+
+                    try:
+                        prediction = soup.find('p', {'class' : 'css-aovmnt e1vfrca35'}).find_all('b')
+
+                        additional_params2_dict['pred_val_min'] = prediction[0].text[:-3].replace("\xa0",'')
+                        additional_params2_dict['pred_val_max'] = prediction[1].text[:-3].replace("\xa0", '')
+                    except Exception as e:
+                        print('No predictions')
+                        print(e)
+
+                    ad.additional_params_1 = json.dumps(additional_params1_dict)
+                    ad.additional_params_2 = json.dumps(additional_params2_dict)
+                    ad.address_params = json.dumps(address_params_dict)
+                    ad.city = city
+                    ad.vivodeship = vivodeship
+                    ad.save()
+
+                self.driver.close()
+                self.driver.quit()
+        end_dt = datetime.now()
+        print(f'Time {(end_dt - start_dt).seconds}')
 
 
 
