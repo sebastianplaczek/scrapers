@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
-from core.views.otodom_params_filler import OtodomFiller
+from core.views.otodom_scrapper_view import OtodomScrapper
 
 class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
-        o = OtodomFiller()
-        o.run()
+        o = OtodomScrapper()
+        o.fill_params_from_link()
         #o.test()

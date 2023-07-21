@@ -67,3 +67,8 @@ class OtodomLogs(models.Model):
     type = models.CharField(max_length=10)
     create_date = models.DateTimeField(default=timezone.now)
     robot = models.CharField(max_length=25)
+
+class Workers(models.Model):
+    type = models.CharField(max_length=10)
+    number =  models.IntegerField(blank=True,null=True)
+    active = models.BooleanField(default=True)

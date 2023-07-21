@@ -5,5 +5,4 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         o = OtodomScrapper()
-        o.fill_params_from_link()
-        #o.test()
+        o.test()
