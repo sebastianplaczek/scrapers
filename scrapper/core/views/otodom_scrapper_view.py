@@ -27,6 +27,7 @@ class OtodomScrapper():
     def __init__(self):
         self.name = 'GoodRobot'
         self.link = ''
+        self.save = True
 
 
     # def init_driver(self):
@@ -43,15 +44,16 @@ class OtodomScrapper():
 
     def init_driver(self):
 
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--incognito')
-        chrome_options.add_argument('--window-size=1600,900')
-        chrome_options.add_argument('--no-sandbox')
-        self.driver = webdriver.Chrome(options=chrome_options)
+        self.chrome_options = Options()
+        #self.chrome_options.add_argument("--headless")
+        self.chrome_options.add_argument('--disable-gpu')
+        self.chrome_options.add_argument('--incognito')
+        self.chrome_options.add_argument('--window-size=1600,900')
+        self.chrome_options.add_argument('--no-sandbox')
+        self.chrome_options.page_load_strategy = 'normal'
+        #self.driver = webdriver.Chrome(options=chrome_options)
 
-        self.run_worker(type='enable')
+        #self.run_worker(type='enable')
         print('Driver inited')
 
     def kill_driver(self):
@@ -104,9 +106,9 @@ class OtodomScrapper():
             print('Activity error')
 
     def check_memory(self):
-        RAM_THRESHOLD = 14000
+        RAM_THRESHOLD = 8000
         if psutil.virtual_memory().used / (1024*1024) > RAM_THRESHOLD:
-            print('Przekroczono próg zajętości pamięci')
+            print(f'Przekroczono próg zajętości pamięci, {psutil.virtual_memory().used}')
             return False
         else:
             print('Pamieć wolna')
@@ -117,7 +119,7 @@ class OtodomScrapper():
 
     def run(self):
         print('Robot zaczyna prace')
-        self.real_estate_data('house pm')
+        self.real_estate_data()
 
         print('done')
         time.sleep(5)
@@ -160,8 +162,8 @@ class OtodomScrapper():
                 break
         return x
 
-    def real_estate_data(self,type):
-        #self.change_worker_activity(type='enable',name='OtoScr')
+    def real_estate_data(self):
+        self.change_worker_activity(type='enable',name='OtoScr')
 
 
         vivodeships = [
@@ -207,106 +209,125 @@ class OtodomScrapper():
                 number_of_params = number_of_offers*4
 
                 self.init_driver()
-                self.open_website(first_web)
-                self.accept_cookies()
-                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(5)
-                try:
+                with webdriver.Chrome(options=self.chrome_options) as self.driver:
+                    self.open_website(first_web)
+                    #self.accept_cookies()
+                    self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(5)
+                    try:
 
-                    html = self.driver.page_source
-                    soup = BeautifulSoup(html, "html.parser")
-                    buttons = soup.find_all('button', {'class': 'eo9qioj1 css-ehn1gc e1e6gtx31'})
-                    number_of_pages = int(buttons[-2].text)
-                    print(f'Number of pages {number_of_pages}')
-                except Exception as e:
-                    print(e)
-                    number_of_pages = 3
+                        html = self.driver.page_source
+                        soup = BeautifulSoup(html, "html.parser")
+                        buttons = soup.find_all('button', {'class': 'eo9qioj1 css-ehn1gc e1e6gtx31'})
+                        number_of_pages = int(buttons[-2].text)
+                        print(f'Number of pages {number_of_pages}')
+                    except Exception as e:
+                        print(e)
+                        number_of_pages = 3
 
-                self.kill_driver()
-
+                self.links = []
                 for i in range(1,number_of_pages+1):
+                    print((i-1)*number_of_offers,len(set(self.links)))
                     print(f'{i}/{number_of_pages+1}')
                     try:
 
                         self.init_driver()
-                        otomoto_link = web.replace('$PAGE_NR$',str(i))
-                        print(otomoto_link)
-                        self.open_website(otomoto_link)
-                        print('Website opened')
-                        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                        print('Website scrolled down')
-                        time.sleep(5)
+                        with webdriver.Chrome(options=self.chrome_options) as self.driver:
+                            otomoto_link = web.replace('$PAGE_NR$',str(i))
+                            print(otomoto_link)
+                            self.open_website(otomoto_link)
+                            print('Website opened')
+                            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                            print('Website scrolled down')
+                            time.sleep(5)
 
-                        html = self.driver.page_source
-                        soup = BeautifulSoup(html, "html.parser")
+                            html = self.driver.page_source
+                            soup = BeautifulSoup(html, "html.parser")
 
-                        offers = soup.find_all('li', {'class' : 'css-iq9jxc e1n6ljqa1'})
-                        print('Number of offers in soup ' , len(offers))
-                        if len(offers) == number_of_offers:
-                            print('correct number of offers')
-                            #import pdb;pdb.set_trace()
-                            for j,offer in enumerate(offers):
-                                #print('enumerating')
-                                self.link ='otodom.pl' + offer.find('a', {'class' : 'css-1up0y1q e1n6ljqa3'})['href']
-                                try:
-
-                                    title = offer.find('h3', {'class' : 'css-qch36y e1ualqfi3'}).text
-                                    #print('title')
-                                except:
-                                    title= None
-                                try:
-                                    address = offer.find('p', {'class' : 'css-14aokuk e1ualqfi4'}).text
-                                    #print('address')
-                                except:
-                                    address = None
-                                param = offer.find_all('span', {'class' : 'css-1on0450 ei6hyam2'})
-                                #print('params')
-
-                                bad_character = self.find_error_letter(param[0].text[:-2])
-                                try:
-                                    price = float(param[0].text.replace(bad_character,"")[:-2])
-                                except:
-                                    price = None
-                                try:
-                                    price_per_m = int(param[1].text[:-5].replace(bad_character,''))
-                                except:
-                                    price_per_m = None
-                                try:
-                                    rooms = int(param[2].text.split(' ')[0])
-                                except:
-                                    rooms = None
-                                try:
-                                    size = float(param[3].text.split(' ')[0])
-                                except:
-                                    size = None
-
-
-
-                                try:
-                                    seller = offer.find('div', { 'class' : 'css-70qvj9 enzg89n0'}).text
-
-                                except:
+                            offers = soup.find_all('li', {'class' : 'css-o9b79t e1dfeild0'})
+                            print('Number of offers in soup ' , len(offers))
+                            if len(offers) >= number_of_offers-5:
+                                print('correct number of offers')
+                                #import pdb;pdb.set_trace()
+                                for j,offer in enumerate(offers):
+                                    #print('enumerating')
                                     try:
-                                        seller = offer.find('span', {
-                                            'class': ['css-1k08n8y enzg89n5']}).text
+                                        self.link ='otodom.pl' + offer.find('a', {'class' : 'css-1tiwk2i e1dfeild2'})['href']
+
+
+                                        try:
+
+                                            title = offer.find('span', {'class' : 'css-ynylfv e1dkl6bf3'}).text
+                                            #print('title')
+                                        except:
+                                            title= None
+                                            print(j,'no title')
+                                        try:
+                                            address = offer.find('p', {'class' : 'css-19dkezj e1dkl6bf4'}).text
+                                            #print('address')
+                                        except:
+                                            address = None
+                                            print(j, 'no address')
+                                        param = offer.find_all('span', {'class' : 'css-yread7 ei6hyam2'})
+                                        #print('params')
+
+                                        bad_character = self.find_error_letter(param[0].text[:-2])
+                                        try:
+                                            price = float(param[0].text.replace(bad_character,"")[:-2])
+                                        except:
+                                            price = None
+                                            print(j, 'no price')
+                                        try:
+                                            price_per_m = int(param[1].text[:-5].replace(bad_character,''))
+                                        except:
+                                            price_per_m = None
+                                            print(j, 'no price per m')
+                                        try:
+                                            rooms = int(param[2].text.split(' ')[0])
+                                        except:
+                                            rooms = None
+                                            print(j, 'no rooms')
+                                        try:
+                                            size = float(param[3].text.split(' ')[0])
+                                        except:
+                                            size = None
+                                            print(j, 'no size')
+
+
+
+                                        try:
+                                            seller = offer.find('div', { 'class' : 'css-70qvj9 enzg89n0'}).text
+
+                                        except:
+                                            try:
+                                                seller = offer.find('span', {
+                                                    'class': ['css-1k08n8y enzg89n5']}).text
+                                            except:
+
+                                                seller = None
+
+
+                                        if self.save== True and self.link not in self.links:
+                                            object = Otodom.objects.create(
+                                                link=self.link,
+                                                title=title,
+                                                address=address,
+                                                price=price,
+                                                price_per_m=price_per_m,
+                                                rooms=rooms,
+                                                size=size,
+                                                type=re_type,
+                                                seller = seller,
+                                                filled = 0,
+                                                page = i
+                                            )
+                                            self.links.append(object.link)
+
+
                                     except:
-
-                                        seller = None
-
-                                Otodom.objects.create(
-                                    link=self.link,
-                                    title=title,
-                                    address=address,
-                                    price=price,
-                                    price_per_m=price_per_m,
-                                    rooms=rooms,
-                                    size=size,
-                                    type=re_type,
-                                    seller = seller,
-                                    filled = 0,
-                                    page = i
-                                )
-                            self.kill_driver()
+                                        print(j,'Error with link')
+                            else:
+                                print('incorrect number of offers')
 
 
 
@@ -316,15 +337,15 @@ class OtodomScrapper():
                                                   type = type,
                                                   error = str(e),
                                               robot='OtodomScrapper')
-                        self.kill_driver()
+                        self.change_worker_activity(type='disable', name='OtoScr')
 
-        #self.change_worker_activity(type='disable', name='OtoScr')
+        self.change_worker_activity(type='disable', name='OtoScr')
 
     def fill_params_from_link(self):
 
         if self.check_worker_activity(name='OtoScr') == False and self.check_memory():
             start_dt = datetime.now()
-            ads = Otodom.objects.filter(filled=0)[:4]
+            ads = Otodom.objects.filter(filled=0)[:8]
 
             if len(ads)== 0:
                 print('No offer')
@@ -335,109 +356,112 @@ class OtodomScrapper():
                     ad.filled = 1
                     ad.save()
 
+                self.init_driver()
                 for ad in ads:
 
 
-                    self.init_driver()
-                    print(ad.link)
-                    #ad.link = 'otodom.pl/pl/oferta/mieszkanie-45-48-m2-kazimierz-ID4lK4P'
+                    with webdriver.Chrome(options=self.chrome_options) as self.driver:
 
-                    self.open_website('https://www.'+ ad.link)
-                    print('Website opened')
-                    self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    print('Website scrolled down')
-                    time.sleep(5)
+                        print(ad.id,ad.link)
+                        #ad.link = 'otodom.pl/pl/oferta/mieszkanie-45-48-m2-kazimierz-ID4lK4P'
 
-                    html = self.driver.page_source
-                    soup = BeautifulSoup(html, "html.parser")
+                        self.open_website('https://www.'+ ad.link)
+                        print('Website opened')
+                        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                        print('Website scrolled down')
 
-                    inactive = soup.find_all('strong', {'class' : 'css-1flyc9m ercakuy1'})
+                        html = self.driver.page_source
+                        soup = BeautifulSoup(html, "html.parser")
 
-                    if len(inactive) > 0:
-                        ad.active = 0
-                        ad.save()
-                    else:
-                        try:
-                            bumped = soup.find_all('p', {'class':'css-1vd92mz ewcwyit0'})
-                            if len(bumped)>0:
-                                ad.bumped = 1
-                        except Exception as e:
-                            print(e,'bump error')
+                        inactive = soup.find_all('strong', {'class' : 'css-1flyc9m ercakuy1'})
 
-
-
-
-                        address_params = soup.find_all('a', {'class': 'css-1in5nid e19r3rnf1'})
-                        address_params_dict = {}
-                        for i,param in enumerate(address_params):
-                            if i >0:
-                                address_params_dict[i] = param.text
-                        print(address_params_dict)
-
-                        try:
-                            city = address_params[2].text
-                            vivodeship = address_params[1].text
-                        except Exception as e:
-                            city = ''
-                            vivodeship = ''
-                            print(e)
-
-
-                        additional_params1 = soup.find_all('div', {'class': 'css-kkaknb enb64yk0'})
-                        additional_params1_dict = {}
-                        for param in additional_params1:
-                            print('param1 iteration')
+                        if len(inactive) > 0:
+                            ad.active = 0
+                            ad.save()
+                        else:
                             try:
-                                title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+                                bumped = soup.find_all('p', {'class':'css-1vd92mz ewcwyit0'})
+                                if len(bumped)>0:
+                                    ad.bumped = 1
+                            except Exception as e:
+                                print(e,'bump error')
 
-                            except Exception:
-                                title = ''
+
+
+
+                            address_params = soup.find_all('a', {'class': 'css-1in5nid e19r3rnf1'})
+                            address_params_dict = {}
+                            for i,param in enumerate(address_params):
+                                if i >0:
+                                    address_params_dict[i] = param.text
+                            print(address_params_dict)
+
                             try:
-                                param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
-                            except Exception:
-                                param_1 = ''
+                                city = address_params[2].text
+                                vivodeship = address_params[1].text
+                            except Exception as e:
+                                city = ''
+                                vivodeship = ''
+                                print(e)
 
-                            additional_params1_dict[title] = param_1
-                        print('param1')
 
-                        additional_params2 = soup.find_all('div', {'class': 'css-1k2qr23 enb64yk0'})
-                        additional_params2_dict = {}
-                        for param in additional_params2:
-                            print('param2 iteration')
+                            additional_params1 = soup.find_all('div', {'class': 'css-kkaknb enb64yk0'})
+                            additional_params1_dict = {}
+                            for param in additional_params1:
+                                print('param1 iteration')
+                                try:
+                                    title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+
+                                except Exception:
+                                    title = ''
+                                try:
+                                    param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
+                                except Exception:
+                                    param_1 = ''
+
+                                additional_params1_dict[title] = param_1
+                            print('param1')
+
+                            additional_params2 = soup.find_all('div', {'class': 'css-1k2qr23 enb64yk0'})
+                            additional_params2_dict = {}
+                            for param in additional_params2:
+                                print('param2 iteration')
+                                try:
+                                    title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+
+                                except Exception:
+                                    title = ''
+                                try:
+                                    param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
+                                except Exception:
+                                    param_1 = ''
+
+                                additional_params2_dict[title] = param_1
+                            print('param2')
+
+
+                            description = soup.find('div', {'class': 'css-1wekrze e1lbnp621'}).text
+
                             try:
-                                title = param.find('div', {'class': 'css-rqy0wg enb64yk2'}).text
+                                prediction = soup.find('p', {'class' : 'css-aovmnt e1vfrca35'}).find_all('b')
 
-                            except Exception:
-                                title = ''
-                            try:
-                                param_1 = param.find('div', {'class': 'css-1wi2w6s enb64yk4'}).text
-                            except Exception:
-                                param_1 = ''
+                                additional_params2_dict['pred_val_min'] = prediction[0].text[:-3].replace("\xa0",'')
+                                additional_params2_dict['pred_val_max'] = prediction[1].text[:-3].replace("\xa0", '')
+                            except Exception as e:
+                                print('No predictions')
+                                print(e)
 
-                            additional_params2_dict[title] = param_1
-                        print('param2')
+                            ad.additional_params_1 = json.dumps(additional_params1_dict)
+                            ad.additional_params_2 = json.dumps(additional_params2_dict)
+                            ad.address_params = json.dumps(address_params_dict)
+                            ad.city = city
+                            ad.vivodeship = vivodeship
 
+                            print('Params added')
 
-                        description = soup.find('div', {'class': 'css-1wekrze e1lbnp621'}).text
-
-                        try:
-                            prediction = soup.find('p', {'class' : 'css-aovmnt e1vfrca35'}).find_all('b')
-
-                            additional_params2_dict['pred_val_min'] = prediction[0].text[:-3].replace("\xa0",'')
-                            additional_params2_dict['pred_val_max'] = prediction[1].text[:-3].replace("\xa0", '')
-                        except Exception as e:
-                            print('No predictions')
-                            print(e)
-
-                        ad.additional_params_1 = json.dumps(additional_params1_dict)
-                        ad.additional_params_2 = json.dumps(additional_params2_dict)
-                        ad.address_params = json.dumps(address_params_dict)
-                        ad.city = city
-                        ad.vivodeship = vivodeship
-
-                        ad.save()
-
-                    self.kill_driver()
+                            ad.save()
+                            print('Save params')
+                        #self.kill_driver()
             end_dt = datetime.now()
             print(f'Time {(end_dt - start_dt).seconds}')
 
