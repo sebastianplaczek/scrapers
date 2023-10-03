@@ -81,3 +81,9 @@ class Workers(models.Model):
     type = models.CharField(max_length=10)
     number =  models.IntegerField(blank=True,null=True)
     active = models.BooleanField(default=True)
+
+
+class OtodomMonitor(models.Model):
+    describe = models.CharField(max_length=255,blank=True,null=True)
+    indicator = models.IntegerField(blank=True,null=True)
+    create_date = models.DateTimeField(default=timezone.now)
