@@ -59,6 +59,15 @@ class Otodom(models.Model):
     filled = models.IntegerField(default=0)
     page = models.IntegerField(blank=True,null=True)
     bumped = models.IntegerField(default=0,blank=True,null=True)
+    new = models.IntegerField(default=0,blank=True,null=True)
+
+class Otodom_fills(models.Model):
+    link = models.CharField(max_length=255, blank=True, null=True)
+    additional_params_1 = models.CharField(max_length=1000)
+    additional_params_2 = models.CharField(max_length=1000)
+    address_params = models.CharField(max_length=1000, blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
+    vivodeship = models.CharField(max_length=50, blank=True, null=True)
 
 
 class OtodomLogs(models.Model):
