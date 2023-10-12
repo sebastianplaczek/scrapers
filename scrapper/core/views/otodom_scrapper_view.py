@@ -185,9 +185,11 @@ class OtodomScrapper():
         ]
 
         real_estate_links = {
-            #'house pm' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/dom,rynek-pierwotny/$VIV$?distanceRadius=0&page=$PAGE_NR$&limit=72&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing',
-            #'flat pm' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie,rynek-pierwotny/$VIV$?distanceRadius=0&2=&limit=72&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing&page=$PAGE_NR$',
-            'plot' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/dzialka/$VIV$?distanceRadius=0&limit=72&by=DEFAULT&direction=DESC&viewType=listing&page=$PAGE_NR$'
+            'house pm' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/dom,rynek-pierwotny/$VIV$?distanceRadius=0&page=$PAGE_NR$&limit=72&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing',
+            'flat pm' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie,rynek-pierwotny/$VIV$?distanceRadius=0&2=&limit=72&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing&page=$PAGE_NR$',
+            'plot' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/dzialka/$VIV$?distanceRadius=0&limit=72&by=DEFAULT&direction=DESC&viewType=listing&page=$PAGE_NR$',
+            'flat sm' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie,rynek-wtorny/$VIV$?ownerTypeSingleSelect=ALL&distanceRadius=0&by=DEFAULT&direction=DESC&viewType=listing&limit=72&page=$PAGE_NR$',
+            'house sm' : 'https://www.otodom.pl/pl/wyniki/sprzedaz/dom,rynek-wtorny/$VIV$?distanceRadius=0&limit=72&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing&page=$PAGE_NR$'
 
         }
 
