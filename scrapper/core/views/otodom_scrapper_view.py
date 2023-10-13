@@ -518,6 +518,25 @@ class OtodomScrapper():
                         print(f'{index}/{self.sample_size}  Duplicate {ad.id}')
             end_dt = datetime.now()
             print(f'Time {(end_dt - start_dt).seconds}')
+    def city_json(self):
+        self.init_driver()
+        with webdriver.Chrome(options=self.chrome_options) as self.driver:
+            self.open_website('https://www.otodom.pl')
+            time.sleep(5)
+            self.accept_cookies()
+            self.driver.find_element(By.CSS_SELECTOR, "div.css-w3x5pk.eia0eze1").click()
+            time.sleep(3)
+            vivo = self.driver.find_elements(By.CSS_SELECTOR,'button.css-1djhvvo.e13cfg7z3')
+            vivo[0].click()
+            time.sleep(1)
+            cities = self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0')
+            cities[1].click()
+            time.sleep(2)
+            self.driver.find_element(By.CSS_SELECTOR,'button.e1wv5hdj0.css-um5x7b.e1e6gtx33').click()
+            time.sleep(5)
+            current_url = self.driver.current_url
+            print("Aktualny URL: ", current_url)
+
 
 
 

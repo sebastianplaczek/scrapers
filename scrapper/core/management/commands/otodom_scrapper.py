@@ -5,5 +5,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         o = OtodomScrapper()
-        o.run()
+        o.city_json()
         #o.test()
