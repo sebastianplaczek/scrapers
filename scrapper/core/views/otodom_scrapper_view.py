@@ -520,22 +520,65 @@ class OtodomScrapper():
             print(f'Time {(end_dt - start_dt).seconds}')
     def city_json(self):
         self.init_driver()
+
+        # take vivos
         with webdriver.Chrome(options=self.chrome_options) as self.driver:
             self.open_website('https://www.otodom.pl')
             time.sleep(5)
             self.accept_cookies()
             self.driver.find_element(By.CSS_SELECTOR, "div.css-w3x5pk.eia0eze1").click()
             time.sleep(3)
-            vivo = self.driver.find_elements(By.CSS_SELECTOR,'button.css-1djhvvo.e13cfg7z3')
-            vivo[0].click()
-            time.sleep(1)
-            cities = self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0')
-            cities[1].click()
-            time.sleep(2)
-            self.driver.find_element(By.CSS_SELECTOR,'button.e1wv5hdj0.css-um5x7b.e1e6gtx33').click()
-            time.sleep(5)
-            current_url = self.driver.current_url
-            print("Aktualny URL: ", current_url)
+            self.num_vivos = len(self.driver.find_elements(By.CSS_SELECTOR,'button.css-1djhvvo.e13cfg7z3'))
+            print(f'Num vivos {self.num_vivos}')
+        time.sleep(5)
+
+        counter = -1
+        for i in range(0,self.num_vivos-1):
+            df = pd.DataFrame()
+            print(f'Next vivo loop {i}')
+            #take cities
+            with webdriver.Chrome(options=self.chrome_options) as self.driver:
+                self.open_website('https://www.otodom.pl')
+                time.sleep(5)
+                self.accept_cookies()
+                self.driver.find_element(By.CSS_SELECTOR, "div.css-w3x5pk.eia0eze1").click()
+                time.sleep(3)
+                self.vivos = self.driver.find_elements(By.CSS_SELECTOR, 'button.css-1djhvvo.e13cfg7z3')
+                print(f'Num vivos in vivo loop {len(self.vivos)}')
+                self.vivos[i].click()
+                time.sleep(1)
+                self.num_cities = len(self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0'))
+                print(f'Num cities in vivo loop {self.num_cities}')
+
+            for j in range(0,self.num_cities-1):
+                with webdriver.Chrome(options=self.chrome_options) as self.driver:
+                    self.open_website('https://www.otodom.pl')
+                    time.sleep(5)
+                    self.accept_cookies()
+                    #print('ilosc vivo',len(self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0')))
+                    #self.vivo_name = self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0')[i].text
+                    self.driver.find_element(By.CSS_SELECTOR, "div.css-w3x5pk.eia0eze1").click()
+                    time.sleep(3)
+                    self.vivos = self.driver.find_elements(By.CSS_SELECTOR, 'button.css-1djhvvo.e13cfg7z3')
+                    self.vivos[i].click()
+                    time.sleep(1)
+                    self.city_name = self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0')[j].text
+                    self.cities = self.driver.find_elements(By.CSS_SELECTOR,'label.css-4h9dq7.e13cfg7z0')
+                    self.cities[j].click()
+                    time.sleep(2)
+                    self.driver.find_element(By.CSS_SELECTOR,'button.e1wv5hdj0.css-um5x7b.e1e6gtx33').click()
+                    time.sleep(5)
+                    current_url = self.driver.current_url
+                    print("Aktualny URL: ", current_url)
+
+                    counter+=1
+
+                    print(counter,self.city_name,current_url)
+                    df.loc[counter,'link'] = current_url
+                    #df.loc[counter, 'vivo'] = self.vivo_name
+                    df.loc[counter, 'city'] = self.city_name
+
+            df.to_excel(f'vivo {i}.xlsx')
 
 
 
